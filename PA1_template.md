@@ -1,11 +1,6 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-author: "Iván J. Barrera Olivera"
-date: "19 de septiembre de 2015"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
+Iván J. Barrera Olivera  
+19 de septiembre de 2015  
 This is the first course project for the course of Reproducible Research.
 This assignment makes use of data from a personal activity monitoring
 device. This device collects data at 5 minute intervals through out the
@@ -15,17 +10,32 @@ and include the number of steps taken in 5 minute intervals each day.
 
 ## Used packages
 For this assigment we use the following packages:
-```{r, echo=TRUE}
+
+```r
 library(utils)
 library(stats)
 library(ggplot2)
 library(dplyr)
 ```
 
+```
+## 
+## Attaching package: 'dplyr'
+## 
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+## 
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+```
+
 ## Loading and preprocessing the data
 In this case, to use de data, first, we have to unzip the file, then read
 the `activity.csv` file and convert the date column as POSIX object.
-```{r, echo=TRUE}
+
+```r
 unzip("activity.zip")
 activity <- read.csv("activity.csv", header = TRUE)
 activity$date <- as.Date(activity$date, "%Y-%m-%d")
@@ -34,13 +44,15 @@ activity$date <- as.Date(activity$date, "%Y-%m-%d")
 ## What is mean total number of steps taken per day?
 Considering that activity data frame have missing values, we need to drop out
 thi values using `complete.cases` function.
-```{r, echo=TRUE}
+
+```r
 activity_no_na <- activity[complete.cases(activity),]
 ```
 
 With this cleaned data set, we can make a histogram of the total number
 of steps taken each day, but first we need to aggregate the steps per day.
-```{r, echo=TRUE}
+
+```r
 steps_per_day <- aggregate(x = activity_no_na$steps,
                            by = list(date = activity_no_na$date), FUN = sum)
 
@@ -49,11 +61,29 @@ colnames(steps_per_day)[2] <- "steps"
 qplot(steps, data = steps_per_day, geom = "histogram")
 ```
 
+```
+## stat_bin: binwidth defaulted to range/30. Use 'binwidth = x' to adjust this.
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-4-1.png) 
+
 Also, with this data, we can estimate the **mean** an the **median** of the total
 number of steps taken per day.
-```{r, echo=TRUE}
+
+```r
 mean(steps_per_day$steps)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
 median(steps_per_day$steps)
+```
+
+```
+## [1] 10765
 ```
 
 
@@ -62,7 +92,8 @@ With the same data set, we can make a time series plot of the 5-minute
 interval (x-axis) and the average number of steps taken, averaged across
 all days (y-axis). First, we estimate the average of steps taken across
 all days and then we make the plot.
-```{r, echo=TRUE}
+
+```r
 avg_steps_per_interval <- aggregate(activity_no_na$steps,
                                     by = list(interval = activity_no_na$interval),
                                     FUN = mean)
@@ -75,10 +106,18 @@ ggplot(avg_steps_per_interval, aes(interval, steps)) +
         ylab("Average steps")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png) 
+
 Also, with this data, we can identify the 5-minute interval that contains
 the maximum number of steps:
-```{r, echo=TRUE}
+
+```r
 avg_steps_per_interval[with(avg_steps_per_interval, steps == max(avg_steps_per_interval$steps)), ]
+```
+
+```
+##     interval    steps
+## 104      835 206.1698
 ```
 
 ## Imputing missing values
@@ -87,14 +126,14 @@ this could have introduced some bias into our calculations and plots.
 So in this section we will impute the missing values.
 
 First, we calculate the total number of missing values in the dataset.
-```{r, echo=TRUE}
-```
+
 
 Second, we create a new data set without missing data. For this, we fill
 all of the missing values in the dataset, creating a lookup table with the
 average steps per interval and using it to fill the missing values with
 a for loop structure.
-```{r, echo=TRUE}
+
+```r
 # Creating lookup table
 lookup_table <- mutate(avg_steps_per_interval,
                        steps = round(avg_steps_per_interval$steps, digits = 0))
@@ -114,15 +153,35 @@ Third, we make a histogram of the total number of steps taken each day and,
 again, we calculate **mean** and **median** total number of steps taken per day.
 We do this to estimate the impact of imputing missing data on the data set over
 our previos statistics.
-```{r, echo=TRUE}
+
+```r
 steps_per_day <- aggregate(x = activity$steps,
                            by = list(date = activity$date), FUN = sum)
 colnames(steps_per_day)[2] <- "steps"
 
 qplot(steps, data = steps_per_day, geom = "histogram")
+```
 
+```
+## stat_bin: binwidth defaulted to range/30. Use 'binwidth = x' to adjust this.
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-10-1.png) 
+
+```r
 mean(steps_per_day$steps)
+```
+
+```
+## [1] 10765.64
+```
+
+```r
 median(steps_per_day$steps)
+```
+
+```
+## [1] 10762
 ```
 
 As we can see, in this case, the impact of imputing missing data over our
@@ -132,7 +191,8 @@ statistics is really minimal.
 Finally, to respond this last question, first we create a new factor variable in the
 dataset with two levels ("weekday" and "weekend").
 
-```{r, echo=TRUE}
+
+```r
 # Create a new column to identify the day of the week
 activity_w_days <- mutate(activity, weekday = weekdays(activity$date))
 
@@ -146,8 +206,8 @@ activity_w_days <- mutate(activity_w_days,type_day = ifelse(activity_w_days$week
 Then we make a panel plot containing a time series plot of the 5-minute
 interval (x-axis) and the average number of steps taken, averaged across
 all weekday days or weekend days (y-axis).
-```{r, echo=TRUE}
 
+```r
 # Estimate the average steps taken per weekend
 activity_weekend <- activity_w_days[activity_w_days$type_day == "weekend", ]
 avg_steps_weekend <- aggregate(activity_weekend$steps,
@@ -171,6 +231,7 @@ ggplot(avg_steps_week, aes(x = interval, y = steps, group = type_day)) +
         xlab("Interval") +
         ylab("Average steps") +
         facet_wrap(~ type_day, nrow = 2, ncol = 1)
-
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-12-1.png) 
 
